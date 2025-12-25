@@ -117,8 +117,24 @@
 
         <!-- Loading Overlay -->
         <div id="loading" class="loading-overlay hidden">
-            <div class="spinner"></div>
-            <p id="loading-text">Processing...</p>
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <p id="loading-text">Processing...</p>
+
+                <!-- Progress Bar -->
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <div id="progress-percent" class="progress-percent">0%</div>
+                </div>
+
+                <!-- Activity Log -->
+                <div class="activity-log">
+                    <div class="activity-log-header">Activity Log</div>
+                    <div id="activity-log" class="activity-log-content"></div>
+                </div>
+            </div>
         </div>
     </div>
 

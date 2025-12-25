@@ -344,9 +344,15 @@ async function downloadYoutube() {
         return;
     }
 
-    showLoading('Downloading audio and separating all instruments (this takes a few minutes)...');
+    showLoading('Processing YouTube video...');
+    clearActivityLog();
+    addLog('Starting YouTube download and separation', 'info');
+    addLog(`URL: ${url}`, 'info');
 
     try {
+        updateProgress(5);
+        addLog('Downloading audio from YouTube...', 'info');
+
         // Use the new separate-all endpoint with YouTube URL
         const response = await fetch('/api/separate-all', {
             method: 'POST',
@@ -357,8 +363,32 @@ async function downloadYoutube() {
         const data = await response.json();
 
         if (!response.ok) {
+            // Show any logs from backend even on error
+            if (data.log && data.log.length > 0) {
+                data.log.forEach(logEntry => {
+                    addLog(logEntry.message, logEntry.type || 'info');
+                });
+            }
+            addLog(`Error: ${data.error || 'Download/separation failed'}`, 'error');
             throw new Error(data.error || 'Download/separation failed');
         }
+
+        // Use real progress and logs from backend
+        if (data.progress) {
+            updateProgress(data.progress);
+        }
+
+        if (data.log && data.log.length > 0) {
+            // Add all backend logs to activity log
+            data.log.forEach(logEntry => {
+                addLog(logEntry.message, logEntry.type || 'info');
+            });
+        }
+
+        addLog(`Title: ${data.title || 'Unknown'}`, 'info');
+        addLog(`Artist: ${data.artist || 'Unknown'}`, 'info');
+        addLog(`Separation complete! ${data.stems ? data.stems.length : 0} stems ready`, 'success');
+        updateProgress(100);
 
         state.jobId = data.job_id;
         state.hasAudio = true;
@@ -377,6 +407,7 @@ async function downloadYoutube() {
         showSuccess(`All instruments separated! Select which one to use for your chart.`);
 
     } catch (error) {
+        addLog(`Fatal error: ${error.message}`, 'error');
         hideLoading();
         showError(error.message);
     }
@@ -591,10 +622,43 @@ function startOver() {
 function showLoading(text) {
     elements.loadingText.textContent = text;
     elements.loading.classList.remove('hidden');
+
+    // Reset progress
+    updateProgress(0);
+    clearActivityLog();
 }
 
 function hideLoading() {
     elements.loading.classList.add('hidden');
+}
+
+function updateProgress(percent) {
+    const progressFill = document.getElementById('progress-fill');
+    const progressPercent = document.getElementById('progress-percent');
+    if (progressFill && progressPercent) {
+        progressFill.style.width = `${percent}%`;
+        progressPercent.textContent = `${Math.round(percent)}%`;
+    }
+}
+
+function addLog(message, type = 'info') {
+    const logContainer = document.getElementById('activity-log');
+    if (!logContainer) return;
+
+    const timestamp = new Date().toLocaleTimeString();
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+    entry.innerHTML = `<span class="log-timestamp">${timestamp}</span>${message}`;
+
+    logContainer.appendChild(entry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+function clearActivityLog() {
+    const logContainer = document.getElementById('activity-log');
+    if (logContainer) {
+        logContainer.innerHTML = '';
+    }
 }
 
 function showError(message) {

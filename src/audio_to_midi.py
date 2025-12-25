@@ -38,7 +38,7 @@ def separate_stems_demucs(
     audio_path: str,
     output_dir: str,
     stem: str = 'vocals',  # 'vocals', 'drums', 'bass', 'other', 'guitar', 'piano'
-    model: str = None,  # Auto-select based on stem
+    model: str = 'htdemucs_6s',  # Use 6-stem model by default
 ) -> Optional[str]:
     """
     Separate audio into stems using Demucs.

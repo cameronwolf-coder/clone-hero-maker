@@ -14,6 +14,11 @@ import shutil
 from pathlib import Path
 from flask import Flask, render_template, request, jsonify, send_file, url_for
 
+# Add ffmpeg to PATH (installed via scoop)
+ffmpeg_path = Path.home() / 'scoop' / 'shims'
+if ffmpeg_path.exists():
+    os.environ['PATH'] = str(ffmpeg_path) + os.pathsep + os.environ.get('PATH', '')
+
 from src.parse_midi import extract_lead_notes, inspect_midi
 from src.map_to_frets import (
     map_pitches_to_lanes,
@@ -246,11 +251,12 @@ def download_youtube():
         # Download audio (no ffmpeg required - download as-is)
         audio_path = job_folder / 'audio.%(ext)s'
         ydl_opts = {
-            'format': 'bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio',
+            'format': 'bestaudio/best',  # More flexible - accept any best audio
             'outtmpl': str(audio_path),
             'quiet': True,
             'no_warnings': True,
             'nocheckcertificate': True,
+            'extract_audio': True,  # Extract audio stream
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -408,6 +414,8 @@ def separate_all_stems():
     url = data.get('url', '').strip()
     job_id = data.get('job_id')  # If continuing from existing job
 
+    print(f"[SEPARATE-ALL] Request received: url={url}, job_id={job_id}")
+
     # Create or get job
     if job_id and job_id in jobs:
         job = jobs[job_id]
@@ -420,38 +428,78 @@ def separate_all_stems():
         job_id = str(uuid.uuid4())[:8]
         job_folder = get_job_folder(job_id)
 
+        print(f"[YOUTUBE] Starting download from {url}")
+        print(f"[YOUTUBE] Job ID: {job_id}")
+
         try:
             import yt_dlp
 
             audio_path = job_folder / 'audio.%(ext)s'
             ydl_opts = {
-                'format': 'bestaudio[ext=m4a]/bestaudio[ext=mp3]/bestaudio',
+                'format': 'bestaudio/best',
                 'outtmpl': str(audio_path),
                 'quiet': True,
                 'no_warnings': True,
+                'noprogress': True,  # Disable progress output completely
                 'nocheckcertificate': True,
+                'ignoreerrors': False,
+                'extract_flat': False,
             }
 
+            print(f"[YOUTUBE] Downloading...")
+            print(f"[YOUTUBE] Creating YoutubeDL instance...")
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                print(f"[YOUTUBE] Calling extract_info...")
                 info = ydl.extract_info(url, download=True)
+                print(f"[YOUTUBE] extract_info completed")
                 title = info.get('title', 'Unknown')
+                print(f"[YOUTUBE] Got title: {title}")
                 artist = info.get('uploader', 'Unknown')
+                print(f"[YOUTUBE] Got artist: {artist}")
 
+            print(f"[YOUTUBE] Looking for downloaded file in {job_folder}")
             # Find the downloaded file
             audio_file = None
             for f in job_folder.iterdir():
+                print(f"[YOUTUBE] Found file: {f.name}")
                 if f.suffix in ['.mp3', '.m4a', '.webm', '.opus', '.wav', '.ogg']:
                     audio_file = f
+                    print(f"[YOUTUBE] Selected audio file: {audio_file.name}")
                     break
 
-            if not audio_file:
+            if not audio_file or not audio_file.exists():
                 return jsonify({'error': 'Audio download failed'}), 500
+
+            # Convert webm/opus/m4a to WAV using ffmpeg directly
+            if audio_file.suffix in ['.webm', '.opus', '.m4a']:
+                print(f"[YOUTUBE] Converting {audio_file.suffix} to WAV using ffmpeg...")
+                wav_file = job_folder / 'audio.wav'
+                import subprocess
+                ffmpeg_exe = str(Path.home() / 'scoop' / 'shims' / 'ffmpeg.exe')
+                result = subprocess.run([
+                    ffmpeg_exe, '-i', str(audio_file),
+                    '-acodec', 'pcm_s16le',
+                    '-ar', '44100',
+                    '-ac', '2',
+                    '-y',
+                    str(wav_file)
+                ], capture_output=True, text=True)
+
+                if result.returncode != 0:
+                    print(f"[YOUTUBE] FFmpeg error: {result.stderr}")
+                    return jsonify({'error': f'FFmpeg conversion failed: {result.stderr[:200]}'}), 500
+
+                print(f"[YOUTUBE] Conversion successful!")
+                audio_file = wav_file
 
             jobs[job_id] = {
                 'audio_path': str(audio_file),
                 'original_name': title,
                 'artist': artist,
                 'source': 'youtube',
+                'progress': 15,  # Downloaded
+                'status': 'downloaded',
+                'log': [{'message': 'Download complete, converted to WAV', 'type': 'success'}],
             }
             job = jobs[job_id]
 
@@ -470,6 +518,11 @@ def separate_all_stems():
         stems_dir = job_folder / 'stems'
         stems_dir.mkdir(exist_ok=True)
 
+        # Update progress: starting separation
+        job['progress'] = 20
+        job['status'] = 'separating'
+        job['log'].append({'message': 'Starting Demucs 6-stem separation...', 'type': 'info'})
+
         print(f"Running Demucs 6-stem separation on {audio_file}...")
         separated_stems = separate_stems_demucs_api(
             str(audio_file),
@@ -478,8 +531,17 @@ def separate_all_stems():
             model='htdemucs_6s',
         )
 
+        job['progress'] = 50
+
         if not separated_stems:
-            return jsonify({'error': 'Stem separation failed - no stems produced'}), 500
+            error_msg = 'Stem separation failed - no stems produced'
+            job['log'].append({'message': error_msg, 'type': 'error'})
+            print(f"ERROR: {error_msg}")
+            print(f"Audio file: {audio_file}")
+            print(f"Stems dir: {stems_dir}")
+            return jsonify({'error': error_msg, 'log': job.get('log', [])}), 500
+
+        job['log'].append({'message': 'Stem separation complete', 'type': 'success'})
 
         print(f"Separated stems: {list(separated_stems.keys())}")
 
@@ -499,12 +561,20 @@ def separate_all_stems():
 
         # Store BPM in job
         job['detected_bpm'] = detected_bpm
+        job['progress'] = 55
+        job['log'].append({'message': f'Detected BPM: {detected_bpm:.1f}', 'type': 'info'})
 
-        for stem in all_stems:
+        # Process each stem
+        for idx, stem in enumerate(all_stems):
             stem_path = stems_dir / f'{stem}.wav'
             if not stem_path.exists():
                 print(f"Stem not found: {stem_path}")
                 continue
+
+            # Update progress for this stem (55-95%)
+            progress = 55 + (idx * 7)
+            job['progress'] = progress
+            job['log'].append({'message': f'Converting {stem} to MIDI...', 'type': 'info'})
 
             # Convert stem to MIDI
             midi_path = job_folder / f'{stem}.mid'
@@ -549,9 +619,11 @@ def separate_all_stems():
                 })
 
                 print(f"  {stem}: {note_count} notes")
+                job['log'].append({'message': f'{stem}: {note_count} notes detected', 'type': 'success'})
 
             except Exception as e:
                 print(f"Failed to convert {stem} to MIDI: {e}")
+                job['log'].append({'message': f'{stem}: Conversion failed - {str(e)}', 'type': 'error'})
                 stem_results.append({
                     'stem': stem,
                     'stem_path': str(stem_path),
@@ -564,6 +636,9 @@ def separate_all_stems():
         # Store results in job
         job['stems'] = {s['stem']: s for s in stem_results}
         job['separation_complete'] = True
+        job['progress'] = 100
+        job['status'] = 'complete'
+        job['log'].append({'message': 'All stems converted successfully!', 'type': 'success'})
 
         # Sort by note count (most notes first, excluding drums typically)
         stem_results.sort(key=lambda x: x['note_count'], reverse=True)
@@ -574,6 +649,8 @@ def separate_all_stems():
             'artist': artist,
             'stems': stem_results,
             'message': 'All stems separated and converted to MIDI!',
+            'progress': job.get('progress', 100),
+            'log': job.get('log', []),
         })
 
     except Exception as e:

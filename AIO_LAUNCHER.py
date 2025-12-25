@@ -415,10 +415,10 @@ class AIOLauncher(tk.Tk):
             messagebox.showerror("Error", f"Failed to launch visual editor: {e}")
 
     def launch_midi_recorder(self):
-        """Launch MIDI recorder."""
+        """Launch MIDI recorder with GUI."""
         try:
-            subprocess.Popen([sys.executable, 'chart_maker.py'])
-            self.status_label.config(text="MIDI recorder launched")
+            subprocess.Popen([sys.executable, 'chart_maker_gui.py'])
+            self.status_label.config(text="MIDI recorder GUI launched")
         except Exception as e:
             messagebox.showerror("Error", f"Failed to launch MIDI recorder: {e}")
 
