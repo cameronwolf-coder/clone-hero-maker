@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "clonehero-converter"
+version = "0.1.0"
+description = "Convert Hooktheory/Hookpad MIDI files to Clone Hero .chart format"
+requires-python = ">=3.9"
+dependencies = [
+    "mido",
+    "python-rtmidi",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+midi2chart = "src.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

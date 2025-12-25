@@ -1,0 +1,27 @@
+# Clone Hero Converter Configuration
+
+# Phrase detection: silence threshold in beats to split phrases
+phrase_silence_beats: 1.0
+
+# Maximum lane jump between consecutive notes (clamped to this)
+max_lane_jump: 2
+
+# Number of smoothing passes to reduce zig-zag patterns
+smoothing_passes: 1
+
+# Default BPM if MIDI has no tempo event
+default_bpm: 120.0
+
+# Track selection: name patterns to identify lead melody track
+# Will try these in order, case-insensitive partial match
+lead_track_patterns:
+  - "lead"
+  - "melody"
+  - "vocal"
+  - "synth"
+
+# Chart metadata defaults
+chart_defaults:
+  resolution: 192
+  difficulty: "Expert"
+  charter: "Auto-Generated"

@@ -1,0 +1,338 @@
+/* Chart Editor Styles - Highway-style Preview */
+
+.editor-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 600px;
+}
+
+.editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg-dark);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+}
+
+.tool-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.tool-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: var(--border);
+    color: var(--text);
+}
+
+.tool-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #000;
+}
+
+.zoom-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    min-width: 50px;
+    text-align: center;
+    font-family: monospace;
+}
+
+#volume-slider {
+    -webkit-appearance: none;
+    background: var(--bg-hover);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#snap-select {
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+#snap-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#volume-slider::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+}
+
+.info-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0 0.75rem;
+    white-space: nowrap;
+}
+
+.info-label span {
+    color: var(--text);
+    font-weight: 500;
+    font-family: monospace;
+}
+
+.editor-main {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+.lane-labels {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 1rem 0.5rem;
+    padding-bottom: 70px;
+    background: var(--bg-dark);
+}
+
+.lane-label {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: #000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.canvas-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #0d1117;
+}
+
+#editor-canvas {
+    display: block;
+}
+
+.scrollbar-container {
+    width: 20px;
+    padding: 0.5rem 0.25rem;
+    background: var(--bg-dark);
+    display: flex;
+    align-items: center;
+}
+
+#timeline-scroll {
+    writing-mode: vertical-lr;
+    direction: rtl;
+    width: 100%;
+    height: 100%;
+    -webkit-appearance: none;
+    background: transparent;
+}
+
+#timeline-scroll::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 50px;
+    background: var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+#timeline-scroll::-webkit-slider-thumb:hover {
+    background: var(--text-muted);
+}
+
+#timeline-scroll::-webkit-slider-runnable-track {
+    background: var(--bg-hover);
+    border-radius: 4px;
+}
+
+.editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--bg-dark);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.edit-hint {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+}
+
+.edit-hint span {
+    padding: 0.25rem 0.5rem;
+    background: var(--bg-hover);
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.editor-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Modal for editor */
+.editor-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.editor-modal.hidden {
+    display: none;
+}
+
+.editor-modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 1000px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.editor-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-dark);
+}
+
+.editor-modal-header h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.75rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: var(--text);
+}
+
+.editor-modal-body {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+}
+
+.editor-modal-body .editor-container {
+    height: 100%;
+    min-height: 500px;
+    border: none;
+    border-radius: 0;
+}
+
+/* Lane colors for reference */
+.lane-green { background: #3fb950; }
+.lane-red { background: #f85149; }
+.lane-yellow { background: #d29922; }
+.lane-blue { background: #58a6ff; }
+.lane-orange { background: #f0883e; }
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .editor-container {
+        height: 450px;
+    }
+
+    .editor-toolbar {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .tool-btn {
+        width: 32px;
+        height: 32px;
+    }
+
+    .info-label {
+        font-size: 0.7rem;
+        padding: 0 0.5rem;
+    }
+
+    .lane-labels {
+        padding: 0.5rem 0.25rem;
+        padding-bottom: 60px;
+    }
+
+    .lane-label {
+        width: 24px;
+        height: 24px;
+        font-size: 0.65rem;
+    }
+
+    .edit-hint {
+        display: none;
+    }
+}

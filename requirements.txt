@@ -1,0 +1,33 @@
+# Core MIDI and Chart Generation
+mido==1.3.2
+python-rtmidi==1.5.8
+pyyaml
+
+# Web Framework
+flask
+
+# Audio Processing
+librosa==0.10.1
+numpy==1.24.3
+pretty_midi
+soundfile==0.12.1
+
+# YouTube Integration
+yt-dlp
+
+# GUI/Visualization
+pygame==2.5.2
+pillow==10.1.0
+
+# AI/ML (Optional but Recommended)
+# Uncomment to enable AI-powered features:
+# demucs - Meta's stem separation
+# basic-pitch - Spotify's audio-to-MIDI
+# torch - PyTorch for Demucs
+# Install with: pip install demucs basic-pitch torch
+
+# Testing
+pytest
+
+# For Chorus API
+requests

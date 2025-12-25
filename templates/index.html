@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clone Hero Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='editor.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Clone Hero Converter</h1>
+            <p class="subtitle">Convert Hooktheory MIDI to Clone Hero .chart</p>
+        </header>
+
+        <main>
+            <!-- Step 1: Input Source -->
+            <section class="card" id="input-section">
+                <h2>1. Choose Input</h2>
+
+                <div class="tabs">
+                    <button class="tab active" data-tab="upload">Upload File</button>
+                    <button class="tab" data-tab="youtube">YouTube URL</button>
+                </div>
+
+                <!-- Upload Tab -->
+                <div class="tab-content active" id="upload-tab">
+                    <div class="upload-zone" id="upload-zone">
+                        <input type="file" id="midi-file" accept=".mid,.midi,.mp3,.m4a,.wav,.ogg,.flac" hidden>
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" width="48" height="48">
+                                <path fill="currentColor" d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                            </svg>
+                        </div>
+                        <p>Drop file here or <span class="link">browse</span></p>
+                        <p class="small">MIDI (.mid) or Audio (.mp3, .m4a, .wav, .ogg)</p>
+                    </div>
+                    <p class="small info-text">Audio files will be automatically separated into instruments (vocals, guitar, bass, drums, piano) using AI. You'll choose which instrument to use for the chart.</p>
+                </div>
+
+                <!-- YouTube Tab -->
+                <div class="tab-content" id="youtube-tab">
+                    <div class="form-group">
+                        <label for="youtube-url">YouTube URL</label>
+                        <div class="input-group">
+                            <input type="url" id="youtube-url" placeholder="https://youtube.com/watch?v=...">
+                            <button type="button" id="youtube-btn" class="btn primary">Convert to Chart</button>
+                        </div>
+                        <p class="small">Downloads audio and separates all instruments automatically</p>
+                    </div>
+                    <p class="small info-text">Audio will be separated into instruments (vocals, guitar, bass, drums, piano) using AI. You'll choose which instrument to use for the chart.</p>
+                </div>
+            </section>
+
+            <!-- Step 2: Track Selection (hidden initially) -->
+            <section class="card hidden" id="track-section">
+                <h2>2. Select Track</h2>
+                <div id="track-list"></div>
+            </section>
+
+            <!-- Step 3: Metadata -->
+            <section class="card hidden" id="metadata-section">
+                <h2>3. Song Details</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="song-name">Song Name</label>
+                        <input type="text" id="song-name" placeholder="My Song">
+                    </div>
+                    <div class="form-group">
+                        <label for="artist-name">Artist</label>
+                        <input type="text" id="artist-name" placeholder="Artist Name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="charter-name">Charter</label>
+                    <input type="text" id="charter-name" placeholder="Your Name" value="Clone Hero Converter">
+                </div>
+
+                <button id="convert-btn" class="btn primary large">Convert to .chart</button>
+            </section>
+
+            <!-- Step 4: Results -->
+            <section class="card hidden" id="results-section">
+                <h2>4. Results</h2>
+
+                <div class="stats" id="stats"></div>
+
+                <div class="qa-issues hidden" id="qa-issues">
+                    <h3>QA Issues (review in Moonscraper)</h3>
+                    <div id="qa-list"></div>
+                </div>
+
+                <div class="preview-container hidden" id="preview-container">
+                    <h3>Lane Preview</h3>
+                    <pre id="preview"></pre>
+                </div>
+
+                <div class="download-buttons">
+                    <button type="button" id="edit-chart" class="btn secondary large">
+                        Edit Chart
+                    </button>
+                    <a id="download-chart" class="btn primary large" href="#" download>
+                        Download .chart
+                    </a>
+                    <a id="download-bundle" class="btn secondary large hidden" href="#" download>
+                        Download Bundle (chart + audio)
+                    </a>
+                </div>
+
+                <button id="start-over" class="btn text">Start Over</button>
+            </section>
+        </main>
+
+        <!-- Status Messages -->
+        <div id="status" class="status hidden"></div>
+
+        <!-- Loading Overlay -->
+        <div id="loading" class="loading-overlay hidden">
+            <div class="spinner"></div>
+            <p id="loading-text">Processing...</p>
+        </div>
+    </div>
+
+    <!-- Editor Modal -->
+    <div id="editor-modal" class="editor-modal hidden">
+        <div class="editor-modal-content">
+            <div class="editor-modal-header">
+                <h2>Chart Editor</h2>
+                <button type="button" class="close-modal" id="close-editor">&times;</button>
+            </div>
+            <div class="editor-modal-body">
+                <div id="chart-editor-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='editor.js') }}"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
